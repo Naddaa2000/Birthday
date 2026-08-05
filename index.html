@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Origin Night — Happy Birthday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Archivo:wght@400;600;700&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="theme-batman locked" data-theme="batman">
+    <!-- Time gate -->
+    <div class="gate" id="gate" hidden>
+      <p class="gate-tag">LOCKED BIOME</p>
+      <h2 class="gate-title">Not yet.</h2>
+      <p class="gate-sub" id="gateSub">Waiting for local time in…</p>
+      <div class="countdown" id="countdown">
+        <div class="cd-unit"><span id="cdD">00</span><label>DAYS</label></div>
+        <div class="cd-unit"><span id="cdH">00</span><label>HRS</label></div>
+        <div class="cd-unit"><span id="cdM">00</span><label>MIN</label></div>
+        <div class="cd-unit"><span id="cdS">00</span><label>SEC</label></div>
+      </div>
+      <p class="gate-meta" id="gateMeta"></p>
+      <p class="gate-error" id="gateError" hidden></p>
+    </div>
+
+    <div class="app" id="app" hidden>
+      <div class="world" aria-hidden="true">
+        <div class="world-sky"></div>
+        <div class="world-city"></div>
+        <div class="world-signal" id="worldSignal"></div>
+        <div class="world-webs" id="worldWebs"></div>
+        <canvas id="fxCanvas" class="world-fx"></canvas>
+        <div class="world-vignette"></div>
+        <div class="comic-slash"></div>
+      </div>
+
+      <div class="balloon-sky" id="balloonSky"></div>
+      <div class="fx-layer" id="fxLayer"></div>
+
+      <header class="hud-top">
+        <div class="brand">
+          <span class="brand-mark" id="brandMark">🦇</span>
+          <div>
+            <p class="brand-tag" id="brandTag">GOTHAM EDITION</p>
+            <h1>ORIGIN NIGHT</h1>
+          </div>
+        </div>
+
+        <div class="hud-stats">
+          <div class="stat">
+            <span class="stat-label">CANDLES</span>
+            <span class="stat-value" id="cakeStatus">6/6</span>
+            <span class="stat-bar"><i id="candleBar"></i></span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">BALLOONS</span>
+            <span class="stat-value" id="balloonStat">6</span>
+            <span class="stat-bar"><i id="balloonBar"></i></span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">LEVEL</span>
+            <span class="stat-value" id="xpLine">—</span>
+          </div>
+        </div>
+      </header>
+
+      <aside class="dock player-dock">
+        <p class="dock-label">THE LEGEND</p>
+
+        <div class="skin-stage">
+          <div class="mc-skin" id="mcSkin" aria-label="Minecraft avatar">
+            <div class="mc-head" id="mcHead">
+              <span class="mc-face-fallback">?</span>
+            </div>
+            <div class="mc-body">
+              <div class="mc-arm left"></div>
+              <div class="mc-torso"></div>
+              <div class="mc-arm right"></div>
+            </div>
+            <div class="mc-legs">
+              <div class="mc-leg left"></div>
+              <div class="mc-leg right"></div>
+            </div>
+          </div>
+          <label class="photo-btn" for="photoInput" id="photoSlot">
+            <input type="file" id="photoInput" accept="image/*" hidden />
+            <span id="photoPlaceholder">Drop face → skin</span>
+          </label>
+          <img id="photoPreview" alt="" hidden />
+        </div>
+
+        <div class="player-meta">
+          <label class="field">
+            <span>NAME</span>
+            <input type="text" id="nameInput" maxlength="24" readonly />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>AGE</span>
+              <input type="number" id="ageInput" readonly />
+            </label>
+            <label class="field">
+              <span>FROM</span>
+              <input type="text" id="fromInput" maxlength="20" readonly />
+            </label>
+          </div>
+        </div>
+
+        <ul class="achievements" id="achievements">
+          <li data-id="photo"><i></i><span>Face</span></li>
+          <li data-id="candles"><i></i><span>Candles</span></li>
+          <li data-id="balloons"><i></i><span>Balloons</span></li>
+          <li data-id="seal"><i></i><span>Sealed</span></li>
+        </ul>
+      </aside>
+
+      <main class="stage">
+        <div class="hero-copy">
+          <p class="hero-eyebrow" id="heroSub">
+            Blow out · Wish · Burst · Seal
+          </p>
+          <h2 class="hero-title" id="heroName">Happy Birthday</h2>
+        </div>
+
+        <div class="cake-orbit">
+          <div class="orbit-ring"></div>
+          <div class="orbit-ring delay"></div>
+          <div class="cake-wish" id="cakeWish" hidden></div>
+          <div class="cake" id="cake" aria-label="Three layer birthday cake">
+            <div class="candles" id="candles"></div>
+            <div class="cake-layer top">
+              <span class="icing"></span>
+              <span class="cake-drip" aria-hidden="true"></span>
+              <span class="cake-badge" aria-hidden="true"></span>
+            </div>
+            <div class="cake-layer mid">
+              <span class="icing"></span>
+              <span class="cake-drip" aria-hidden="true"></span>
+              <span class="cake-deco" aria-hidden="true"></span>
+            </div>
+            <div class="cake-layer base">
+              <span class="icing"></span>
+              <span class="cake-drip" aria-hidden="true"></span>
+              <span class="cake-deco" aria-hidden="true"></span>
+              <span class="cake-band" aria-hidden="true"></span>
+            </div>
+            <div class="cake-plate"></div>
+            <div class="cake-glow"></div>
+          </div>
+        </div>
+
+        <div class="stage-actions">
+          <button type="button" class="btn primary" id="btnRelight" hidden>
+            Relight
+          </button>
+          <button type="button" class="btn ghost" id="btnRefill" hidden>
+            Refill
+          </button>
+        </div>
+
+        <div class="candle-log center-log" id="candleLog">
+          <span class="toast-kicker">CANDLE WISHES</span>
+          <ol id="candleWishList"></ol>
+        </div>
+      </main>
+
+      <aside class="dock quest-dock">
+        <p class="dock-label">MISSION LOG</p>
+        <div class="toast-box">
+          <span class="toast-kicker">FLOW</span>
+          <p id="toastText">
+            1) Blow every candle &amp; make a wish<br />2) Burst every balloon<br />3)
+            Seal the night — only after both are done
+          </p>
+        </div>
+        <p class="footer-theme" id="footerTheme">Batman · Gotham</p>
+      </aside>
+
+      <div class="wish-toast" id="wishToast" hidden>
+        <button
+          type="button"
+          class="wish-close"
+          id="wishClose"
+          aria-label="Dismiss wish"
+        >
+          ×
+        </button>
+        <span class="wish-kicker">WISH UNLOCKED</span>
+        <p id="wishToastText"></p>
+        <span class="wish-timer" id="wishTimer" aria-hidden="true"></span>
+      </div>
+
+      <div class="achieve-pop" id="achievePop" hidden>
+        <span class="achieve-icon">★</span>
+        <div>
+          <strong>Unlocked</strong>
+          <p id="achieveText"></p>
+        </div>
+      </div>
+
+      <div class="intro" id="intro">
+        <div class="intro-burst" aria-hidden="true"></div>
+        <p class="intro-tag" id="introTag">ORIGIN LOADING</p>
+        <h2 class="intro-title" id="introTitle">Happy Birthday</h2>
+        <p class="intro-hint">Comic energy. Adult energy. Their night.</p>
+
+        <ul class="intro-steps" id="introSteps">
+          <li>
+            <span class="step-num">01</span>
+            <span class="step-text"
+              ><strong>Blow the candles</strong> to make a wish — type it in, or skip if you want.</span
+            >
+          </li>
+          <li>
+            <span class="step-num">02</span>
+            <span class="step-text"
+              ><strong>Click the balloons</strong> to pop them and reveal the wishes inside.</span
+            >
+          </li>
+          <li>
+            <span class="step-num">03</span>
+            <span class="step-text"
+              ><strong>Seal a note</strong> to your future self so you can read it later.</span
+            >
+          </li>
+        </ul>
+
+        <button type="button" class="btn primary xl" id="btnEnter">
+          Enter the night
+        </button>
+      </div>
+    </div>
+
+    <!-- Per-candle wish (centered) -->
+    <dialog class="modal centered-modal" id="candleModal">
+      <form method="dialog" class="modal-card" id="candleWishForm">
+        <h3>Candle <span id="candleNum">1</span> — make a wish</h3>
+        <p class="modal-hint">Say it. Seal it. Blow it out.</p>
+        <label class="field">
+          <span>YOUR WISH</span>
+          <textarea
+            id="candleWishInput"
+            rows="3"
+            maxlength="180"
+            required
+            placeholder="This year I want…"
+          ></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="submit" class="btn primary" value="blow">
+            Blow it out
+          </button>
+          <button type="button" class="btn ghost" id="btnSkipCandle">
+            Skip silent
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Final seal / email (centered) -->
+    <dialog class="modal seal-modal centered-modal" id="sealModal">
+      <form class="modal-card" id="sealForm">
+        <h3>Seal the night</h3>
+        <p class="modal-hint">
+          Email yourself every wish from tonight — a reminder for later.
+        </p>
+        <label class="field">
+          <span>YOUR EMAIL</span>
+          <input
+            type="email"
+            id="sealEmail"
+            required
+            placeholder="you@email.com"
+            autocomplete="email"
+          />
+        </label>
+        <label class="field">
+          <span>NOTE TO FUTURE YOU</span>
+          <textarea
+            id="sealNote"
+            rows="3"
+            maxlength="500"
+            required
+            placeholder="Something you want to remember… or tell yourself a year from now."
+          ></textarea>
+        </label>
+        <label class="field">
+          <span>NOTE TO THE DEVELOPER</span>
+          <textarea
+            id="devNote"
+            rows="3"
+            maxlength="400"
+            placeholder="Optional message for whoever built this…"
+          ></textarea>
+        </label>
+        <label class="check-row">
+          <input type="checkbox" id="shareWithCreator" />
+          <span>Also send my note to the developer</span>
+        </label>
+        <p class="modal-fine">
+          Check the box only if you want your developer note to be sent to the
+          Developer.
+        </p>
+        <div class="modal-actions">
+          <button type="submit" class="btn primary" id="btnSealSend">
+            Email my wishes
+          </button>
+        </div>
+        <p class="email-status" id="sealStatus" hidden></p>
+      </form>
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>
