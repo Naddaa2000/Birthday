@@ -343,6 +343,17 @@ body.theme-spiderman .world-webs {
   transition: transform 0.35s var(--ease);
 }
 
+.music-btn {
+  font-size: 0.68rem;
+  padding: 0.45rem 0.7rem;
+  white-space: nowrap;
+}
+
+.music-btn[aria-pressed="false"] {
+  opacity: 0.55;
+  border-color: var(--border);
+}
+
 .theme-switch {
   display: flex;
   border: 1px solid var(--border);
@@ -1619,6 +1630,57 @@ dialog.modal[open] {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+}
+
+.dev-ask {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.dev-ask-label {
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.yesno {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.yesno-btn {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.yesno-btn:hover {
+  border-color: var(--border-hi);
+  color: var(--text);
+}
+
+.yesno-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-0);
+  box-shadow: 0 0 16px var(--glow);
+}
+
+#devNoteField {
+  animation: fade-up 0.35s var(--ease);
 }
 
 .candle-log {
