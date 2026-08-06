@@ -99,6 +99,41 @@
   const sealForm = document.getElementById("sealForm");
   const sealStatus = document.getElementById("sealStatus");
 
+  const TOKEN_KEY = "originNightToken";
+
+  function readPartyToken() {
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = (params.get("k") || params.get("token") || "").trim();
+    if (fromUrl) {
+      try {
+        sessionStorage.setItem(TOKEN_KEY, fromUrl);
+      } catch {
+        /* ignore */
+      }
+      return fromUrl;
+    }
+    try {
+      return (sessionStorage.getItem(TOKEN_KEY) || "").trim();
+    } catch {
+      return "";
+    }
+  }
+
+  function apiHeaders(extra) {
+    const headers = { ...(extra || {}) };
+    const token = readPartyToken();
+    if (token) headers["X-Party-Token"] = token;
+    return headers;
+  }
+
+  function withTokenQuery(url) {
+    const token = readPartyToken();
+    if (!token) return url;
+    const u = new URL(url, window.location.origin);
+    u.searchParams.set("k", token);
+    return u.pathname + u.search;
+  }
+
   function normalizeTheme(raw) {
     const t = String(raw || "").toLowerCase().trim();
     if (t === "spiderman" || t === "spider-man" || t === "girls") return "spiderman";
@@ -162,6 +197,64 @@
     brandTag.textContent = meta.tag;
     footerTheme.textContent = meta.footer;
     introTag.textContent = meta.intro;
+    spawnSkyLife(theme);
+  }
+
+  const BAT_SVG = `<svg viewBox="0 0 64 28" fill="currentColor" aria-hidden="true"><path d="M32 16c-2-6-4-10-6-12 1 4 1 8 0 11-4-3-9-6-14-7 5 3 8 7 9 12-5-1-10-1-15 1 6 1 11 4 14 8 2-3 4-5 6-5s4 2 6 5c3-4 8-7 14-8-5-2-10-2-15-1 1-5 4-9 9-12-5 1-10 4-14 7-1-3-1-7 0-11-2 2-4 6-6 12z"/></svg>`;
+
+  function spawnSkyLife(theme) {
+    const layer = document.getElementById("skyLife");
+    if (!layer) return;
+    layer.innerHTML = "";
+
+    if (theme === "batman") {
+      const count = 7;
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement("div");
+        el.className = "sky-bat";
+        el.innerHTML = BAT_SVG;
+        const top = 8 + Math.random() * 32;
+        const dur = 9 + Math.random() * 10;
+        const delay = -Math.random() * dur;
+        const scale = 0.75 + Math.random() * 0.85;
+        el.style.top = `${top}%`;
+        el.style.left = "0";
+        el.style.setProperty("--s", String(scale));
+        el.style.setProperty("--o", String(0.55 + Math.random() * 0.35));
+        el.style.setProperty("--bob", `${(Math.random() - 0.5) * 20}px`);
+        el.style.setProperty("--arc", `${-12 - Math.random() * 30}px`);
+        el.style.animationDuration = `${dur}s`;
+        el.style.animationDelay = `${delay}s`;
+        const svg = el.querySelector("svg");
+        if (svg) {
+          svg.style.animationDuration = `${0.2 + Math.random() * 0.14}s`;
+        }
+        layer.appendChild(el);
+      }
+      return;
+    }
+
+    // Spider-Man — web casts + swing trails
+    for (let i = 0; i < 8; i++) {
+      const line = document.createElement("div");
+      line.className = "sky-web-line";
+      line.style.top = `${8 + Math.random() * 45}%`;
+      line.style.left = `${2 + Math.random() * 50}%`;
+      line.style.width = `${140 + Math.random() * 200}px`;
+      line.style.setProperty("--ang", `${-30 + Math.random() * 48}deg`);
+      line.style.animationDuration = `${5 + Math.random() * 6}s`;
+      line.style.animationDelay = `${-Math.random() * 8}s`;
+      layer.appendChild(line);
+    }
+    for (let i = 0; i < 4; i++) {
+      const swing = document.createElement("div");
+      swing.className = "sky-swing";
+      swing.style.top = `${8 + i * 14}%`;
+      swing.style.setProperty("--dip", `${40 + Math.random() * 55}px`);
+      swing.style.animationDuration = `${8 + Math.random() * 7}s`;
+      swing.style.animationDelay = `${-Math.random() * 10}s`;
+      layer.appendChild(swing);
+    }
   }
 
   function updateHero() {
@@ -568,7 +661,7 @@
     try {
       const res = await fetch("/api/send-wishes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: apiHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           email,
           personalNote,
@@ -577,6 +670,7 @@
           candleWishes: state.candleWishes,
           balloonWishes: state.collectedBalloonWishes,
           name: state.name,
+          token: readPartyToken(),
         }),
       });
       const data = await res.json();
@@ -678,14 +772,18 @@
     }
 
     function spawn() {
-      const n = Math.min(40, Math.floor(window.innerWidth / 30));
+      const n = Math.min(36, Math.floor(window.innerWidth / 34));
+      const batman = state.theme === "batman";
       particles = Array.from({ length: n }, () => ({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
-        s: 2 + Math.random() * 4,
-        vy: -0.2 - Math.random() * 0.5,
-        vx: (Math.random() - 0.5) * 0.3,
-        a: 0.15 + Math.random() * 0.35,
+        s: batman ? 1.2 + Math.random() * 2.2 : 1.5 + Math.random() * 3,
+        vy: batman
+          ? -0.12 - Math.random() * 0.35
+          : -0.18 - Math.random() * 0.45,
+        vx: (Math.random() - 0.5) * (batman ? 0.45 : 0.55),
+        a: batman ? 0.08 + Math.random() * 0.2 : 0.12 + Math.random() * 0.28,
+        kind: batman ? "ember" : Math.random() > 0.55 ? "spark" : "ember",
       }));
     }
 
@@ -694,16 +792,30 @@
       const accent = getComputedStyle(document.body)
         .getPropertyValue("--accent")
         .trim();
+      const accent2 = getComputedStyle(document.body)
+        .getPropertyValue("--accent-2")
+        .trim();
+      const batman = state.theme === "batman";
+
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
+        if (batman) p.x += Math.sin(p.y * 0.02) * 0.15;
         if (p.y < -10) {
           p.y = window.innerHeight + 10;
           p.x = Math.random() * window.innerWidth;
         }
+        if (p.x < -20) p.x = window.innerWidth + 20;
+        if (p.x > window.innerWidth + 20) p.x = -20;
+
         ctx.globalAlpha = p.a;
-        ctx.fillStyle = accent;
-        ctx.fillRect(p.x, p.y, p.s, p.s);
+        if (p.kind === "spark") {
+          ctx.fillStyle = accent2;
+          ctx.fillRect(p.x, p.y, p.s * 0.6, p.s * 2.2);
+        } else {
+          ctx.fillStyle = accent;
+          ctx.fillRect(p.x, p.y, p.s, p.s);
+        }
       }
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(tick);
@@ -938,13 +1050,45 @@
   function showGate(data) {
     gate.hidden = false;
     app.hidden = true;
-    document.getElementById("gateSub").textContent =
-      `Opens when it’s time in ${data.cityLabel || data.timezone}`;
-    document.getElementById("gateMeta").textContent = data.unlockAt
-      ? `Unlocks ${data.unlockAt.replace("T", " ")} · ${data.timezone}`
-      : "";
+
+    const title = document.querySelector(".gate-title");
+    const tag = document.querySelector(".gate-tag");
+    const countdown = document.getElementById("countdown");
+    const accessCode = data.accessCode || null;
+
+    if (accessCode === "consumed") {
+      if (tag) tag.textContent = "NIGHT COMPLETE";
+      if (title) title.textContent = "Already sealed.";
+      document.getElementById("gateSub").textContent =
+        data.error ||
+        "This invite was used. Origin Night only happens once.";
+      if (countdown) countdown.hidden = true;
+      document.getElementById("gateMeta").textContent = "";
+    } else if (accessCode === "missing" || accessCode === "invalid") {
+      if (tag) tag.textContent = "PRIVATE INVITE";
+      if (title) title.textContent =
+        accessCode === "missing" ? "Invite required." : "Invalid invite.";
+      document.getElementById("gateSub").textContent =
+        data.error ||
+        "Open the private link you were sent (it ends with ?k=…).";
+      if (countdown) countdown.hidden = true;
+      document.getElementById("gateMeta").textContent = "";
+    } else {
+      if (tag) tag.textContent = "LOCKED BIOME";
+      if (title) title.textContent = "Not yet.";
+      document.getElementById("gateSub").textContent =
+        `Opens when it’s time in ${data.cityLabel || data.timezone}`;
+      if (countdown) countdown.hidden = false;
+      document.getElementById("gateMeta").textContent = data.unlockAt
+        ? `Unlocks ${data.unlockAt.replace("T", " ")} · ${data.timezone}`
+        : "";
+    }
+
     const err = document.getElementById("gateError");
-    if (data.error) {
+    if (data.error && !accessCode) {
+      err.hidden = false;
+      err.textContent = data.error;
+    } else if (data.error && accessCode && data.showError) {
       err.hidden = false;
       err.textContent = data.error;
     } else {
@@ -955,6 +1099,7 @@
   function showApp() {
     gate.hidden = true;
     app.hidden = false;
+    spawnSkyLife(state.theme);
   }
 
   let countdownTimer = null;
@@ -973,16 +1118,49 @@
     }
   }
 
-  async function checkTimeGate() {
-    const res = await fetch("/api/time-gate");
+  async function checkAccess() {
+    const res = await fetch(withTokenQuery("/api/access"), {
+      headers: apiHeaders(),
+    });
     const data = await res.json();
+    return data;
+  }
+
+  async function checkTimeGate() {
+    const res = await fetch(withTokenQuery("/api/time-gate"), {
+      headers: apiHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return {
+        ok: false,
+        accessDenied: true,
+        data: {
+          accessCode: data.code || "invalid",
+          error: data.error || "Access denied.",
+        },
+      };
+    }
     if (data.unlocked) return { ok: true, data };
     return { ok: false, data };
   }
 
   async function bootstrap(fromCountdown) {
     try {
+      const access = await checkAccess();
+      if (access.tokenRequired && !access.ok) {
+        showGate({
+          accessCode: access.code,
+          error: access.error,
+        });
+        return;
+      }
+
       const gateResult = await checkTimeGate();
+      if (gateResult.accessDenied) {
+        showGate(gateResult.data);
+        return;
+      }
       if (!gateResult.ok) {
         showGate(gateResult.data);
         if (
@@ -1001,7 +1179,17 @@
         // soft unlock flash
       }
 
-      const cfgRes = await fetch("/api/config");
+      const cfgRes = await fetch(withTokenQuery("/api/config"), {
+        headers: apiHeaders(),
+      });
+      if (!cfgRes.ok) {
+        const err = await cfgRes.json().catch(() => ({}));
+        showGate({
+          accessCode: err.code || "invalid",
+          error: err.error || "Could not load party config.",
+        });
+        return;
+      }
       const cfg = await cfgRes.json();
       applyConfig(cfg);
       showApp();
