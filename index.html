@@ -70,6 +70,16 @@
             <span class="stat-value" id="xpLine">—</span>
           </div>
         </div>
+
+        <button
+          type="button"
+          class="btn ghost music-btn"
+          id="btnMusic"
+          aria-pressed="true"
+          title="Mute piano"
+        >
+          ♪ Piano
+        </button>
       </header>
 
       <aside class="dock player-dock">
@@ -177,8 +187,8 @@
         <div class="toast-box">
           <span class="toast-kicker">FLOW</span>
           <p id="toastText">
-            1) Blow every candle &amp; make a wish<br />2) Burst every balloon<br />3)
-            Seal the night — only after both are done
+            1) Blow every candle &amp; make a wish<br />2) Burst every
+            balloon<br />3) Seal the night — only after both are done
           </p>
         </div>
         <p class="footer-theme" id="footerTheme">Batman · Gotham</p>
@@ -216,19 +226,22 @@
           <li>
             <span class="step-num">01</span>
             <span class="step-text"
-              ><strong>Blow the candles</strong> to make a wish — type it in, or skip if you want.</span
+              ><strong>Click to blow candles</strong> to make a wish, type it
+              in, or skip if you want.</span
             >
           </li>
           <li>
             <span class="step-num">02</span>
             <span class="step-text"
-              ><strong>Click the balloons</strong> to pop them and reveal the wishes inside.</span
+              ><strong>Click the balloons</strong> to pop them and reveal the
+              wishes inside.</span
             >
           </li>
           <li>
             <span class="step-num">03</span>
             <span class="step-text"
-              ><strong>Seal a note</strong> to your future self so you can read it later.</span
+              ><strong>Seal a note</strong> to your future self so you can read
+              it later.</span
             >
           </li>
         </ul>
@@ -292,22 +305,35 @@
             placeholder="Something you want to remember… or tell yourself a year from now."
           ></textarea>
         </label>
-        <label class="field">
+
+        <div class="dev-ask" role="group" aria-labelledby="devAskLabel">
+          <p class="dev-ask-label" id="devAskLabel">
+            Do you want to send a note to the developer?
+          </p>
+          <div class="yesno">
+            <button type="button" class="yesno-btn" id="devNoteYes" aria-pressed="false">
+              Yes
+            </button>
+            <button type="button" class="yesno-btn active" id="devNoteNo" aria-pressed="true">
+              No
+            </button>
+          </div>
+          <input type="checkbox" id="shareWithCreator" hidden />
+        </div>
+
+        <label class="field" id="devNoteField" hidden>
           <span>NOTE TO THE DEVELOPER</span>
           <textarea
             id="devNote"
             rows="3"
             maxlength="400"
-            placeholder="Optional message for whoever built this…"
+            placeholder="A short message for whoever built this…"
           ></textarea>
         </label>
-        <label class="check-row">
-          <input type="checkbox" id="shareWithCreator" />
-          <span>Also send my note to the developer</span>
-        </label>
+
         <p class="modal-fine">
-          Check the box only if you want your developer note to be sent to the
-          Developer.
+          Your future-you note is always emailed to you. The developer note only
+          sends if you choose Yes.
         </p>
         <div class="modal-actions">
           <button type="submit" class="btn primary" id="btnSealSend">

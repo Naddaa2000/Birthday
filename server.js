@@ -13,7 +13,8 @@ const ROOT = fs.existsSync(path.join(__dirname, "index.html"))
   : path.join(__dirname, "..");
 
 app.use(express.json({ limit: "64kb" }));
-app.use(express.static(ROOT));function parseWishes() {
+app.use(express.static(ROOT));
+function parseWishes() {
   return String(process.env.WISHES || "")
     .split("|")
     .map((w) => w.trim())
@@ -21,8 +22,11 @@ app.use(express.static(ROOT));function parseWishes() {
 }
 
 function normalizeTheme(raw) {
-  const t = String(raw || "").toLowerCase().trim();
-  if (t === "spiderman" || t === "spider-man" || t === "girls") return "spiderman";
+  const t = String(raw || "")
+    .toLowerCase()
+    .trim();
+  if (t === "spiderman" || t === "spider-man" || t === "girls")
+    return "spiderman";
   return "batman";
 }
 
@@ -37,7 +41,7 @@ function publicConfig() {
 
   if (!wishes.length) {
     console.warn(
-      "[config] WISHES is empty in .env — balloons will have no messages. Set WISHES=wish1|wish2|..."
+      "[config] WISHES is empty in .env — balloons will have no messages. Set WISHES=wish1|wish2|...",
     );
   }
 
@@ -58,7 +62,11 @@ function publicConfig() {
     wishesCount: padded.length ? wishesCount : 0,
     wishes: padded,
     cakeWish: (process.env.CAKE_WISH || "").trim(),
-    cityLabel: (process.env.CITY_LABEL || process.env.TIMEZONE || "local").trim(),
+    cityLabel: (
+      process.env.CITY_LABEL ||
+      process.env.TIMEZONE ||
+      "local"
+    ).trim(),
     timezone: (process.env.TIMEZONE || "UTC").trim(),
   };
 }
@@ -80,47 +88,249 @@ function buildEmailHtml({
   includeDevNote,
 }) {
   const who = escapeHtml(name || "You");
-  const candles = candleWishes
-    .map(
-      (w, i) =>
-        `<li><strong>Candle ${i + 1}:</strong> ${escapeHtml(w || "(silent wish)")}</li>`
-    )
-    .join("");
-  const balloons = balloonWishes
-    .map((w, i) => `<li><strong>Balloon ${i + 1}:</strong> ${escapeHtml(w)}</li>`)
-    .join("");
 
-  // Personal note is always included when present
-  let noteBlock = "";
-  if (personalNote) {
-    noteBlock = `
-      <h3>Note to future self</h3>
-      <blockquote style="border-left:3px solid #f5c518;padding-left:12px;color:#333;">
-        ${escapeHtml(personalNote)}
-      </blockquote>`;
-  }
+  const candles =
+    candleWishes && candleWishes.length
+      ? candleWishes
+          .map(
+            (wish, i) => `
+              <div style="display:flex;gap:18px;padding:14px 0;border-bottom:1px solid #f1f1f1;">
+                <div style="
+                    min-width:42px;
+                    font-size:20px;
+                    font-weight:bold;
+                    color:#b0b0b0;
+                ">
+                  ${String(i + 1).padStart(2, "0")}
+                </div>
 
-  let devBlock = "";
-  if (includeDevNote && noteToDeveloper) {
-    devBlock = `
-      <h3>Note to developer</h3>
-      <blockquote style="border-left:3px solid #2b6cff;padding-left:12px;color:#333;">
-        ${escapeHtml(noteToDeveloper)}
-      </blockquote>`;
-  }
+                <div style="
+                    font-size:17px;
+                    line-height:1.8;
+                    color:#222;
+                ">
+                  ${escapeHtml(wish || "Silent wish")}
+                </div>
+              </div>
+            `,
+          )
+          .join("")
+      : `<p style="color:#888;">No candle wishes recorded.</p>`;
+
+  const balloons =
+    balloonWishes && balloonWishes.length
+      ? balloonWishes
+          .map(
+            (wish, i) => `
+              <div style="display:flex;gap:18px;padding:14px 0;border-bottom:1px solid #f1f1f1;">
+                <div style="
+                    min-width:42px;
+                    font-size:20px;
+                    font-weight:bold;
+                    color:#b0b0b0;
+                ">
+                  ${String(i + 1).padStart(2, "0")}
+                </div>
+
+                <div style="
+                    font-size:17px;
+                    line-height:1.8;
+                    color:#222;
+                ">
+                  ${escapeHtml(wish)}
+                </div>
+              </div>
+            `,
+          )
+          .join("")
+      : `<p style="color:#888;">No balloon wishes recorded.</p>`;
+
+  const noteBlock = personalNote
+    ? `
+      <div style="
+        margin-top:40px;
+        padding:24px;
+        background:#fafafa;
+        border-left:4px solid #d4af37;
+        border-radius:10px;
+      ">
+        <div style="
+          font-size:12px;
+          letter-spacing:2px;
+          text-transform:uppercase;
+          color:#888;
+          margin-bottom:12px;
+        ">
+          Note to Future Self
+        </div>
+
+        <div style="
+          font-size:17px;
+          line-height:1.9;
+          color:#333;
+          font-style:italic;
+        ">
+          "${escapeHtml(personalNote)}"
+        </div>
+      </div>
+    `
+    : "";
+
+  const devBlock =
+    includeDevNote && noteToDeveloper
+      ? `
+      <div style="
+        margin-top:30px;
+        padding:24px;
+        background:#fafafa;
+        border-left:4px solid #2563eb;
+        border-radius:10px;
+      ">
+        <div style="
+          font-size:12px;
+          letter-spacing:2px;
+          text-transform:uppercase;
+          color:#888;
+          margin-bottom:12px;
+        ">
+          Note to Developer
+        </div>
+
+        <div style="
+          font-size:16px;
+          line-height:1.8;
+          color:#333;
+        ">
+          ${escapeHtml(noteToDeveloper)}
+        </div>
+      </div>
+    `
+      : "";
 
   return `
-    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#111;">
-      <h1 style="font-size:22px;">Origin Night — ${who}</h1>
-      <p>A sealed record of this birthday.</p>
-      <h3>Candle wishes</h3>
-      <ol>${candles || "<li>(none)</li>"}</ol>
-      <h3>Balloon wishes</h3>
-      <ol>${balloons || "<li>(none)</li>"}</ol>
-      ${noteBlock}
-      ${devBlock}
-      <p style="margin-top:28px;color:#666;font-size:13px;">Saved from Origin Night.</p>
-    </div>`;
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Origin Night</title>
+</head>
+
+<body style="
+    margin:0;
+    padding:40px 20px;
+    background:#f4f4f4;
+    font-family:Georgia,'Times New Roman',serif;
+">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td align="center">
+
+<table role="presentation"
+       width="650"
+       cellpadding="0"
+       cellspacing="0"
+       style="
+          background:#fff;
+          border-radius:18px;
+          overflow:hidden;
+          border:1px solid #e8e8e8;
+          box-shadow:0 10px 30px rgba(0,0,0,.06);
+       ">
+
+<tr>
+<td style="padding:60px;">
+
+<div style="
+    text-align:center;
+    margin-bottom:50px;
+">
+
+<div style="
+    font-size:13px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:#999;
+">
+Origin Night
+</div>
+
+<h1 style="
+    margin:15px 0 10px;
+    font-size:38px;
+    font-weight:normal;
+    color:#111;
+">
+Happy Birthday, ${who}
+</h1>
+
+<p style="
+    font-size:17px;
+    color:#666;
+    line-height:1.8;
+    max-width:480px;
+    margin:auto;
+">
+Another year has passed.
+These wishes are a snapshot of who you were today,
+preserved for the future.
+</p>
+
+</div>
+
+<hr style="border:none;border-top:1px solid #eee;margin:40px 0;">
+
+<h2 style="
+    font-size:30px;
+    font-weight:normal;
+    margin-bottom:25px;
+">
+🕯 Candle Wishes
+</h2>
+
+${candles}
+
+<hr style="border:none;border-top:1px solid #eee;margin:50px 0;">
+
+<h2 style="
+    font-size:30px;
+    font-weight:normal;
+    margin-bottom:25px;
+">
+🎈 Balloon Wishes
+</h2>
+
+${balloons}
+
+${noteBlock}
+
+${devBlock}
+
+<hr style="border:none;border-top:1px solid #eee;margin:50px 0 30px;">
+
+<div style="
+    text-align:center;
+    color:#888;
+    font-size:14px;
+    line-height:1.8;
+">
+This message was created on your birthday and sealed by
+<strong>Origin Night</strong>.<br>
+Keep dreaming. Keep building. Keep becoming.
+</div>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+`;
 }
 
 function createTransport() {
@@ -159,7 +369,7 @@ app.get("/api/time-gate", async (_req, res) => {
 
   try {
     const url = `https://timeapi.io/api/Time/current/zone?timeZone=${encodeURIComponent(
-      timezone
+      timezone,
     )}`;
     const r = await fetch(url);
     if (!r.ok) throw new Error(`timeapi status ${r.status}`);
@@ -220,16 +430,30 @@ app.post("/api/send-wishes", async (req, res) => {
     return res.status(400).json({ ok: false, error: "Valid email required." });
   }
 
-  const note = String(personalNote || "").trim().slice(0, 800);
-  const devNote = String(noteToDeveloper || "").trim().slice(0, 400);
+  const note = String(personalNote || "")
+    .trim()
+    .slice(0, 800);
+  const devNote = String(noteToDeveloper || "")
+    .trim()
+    .slice(0, 400);
   const includeDevNote = Boolean(shareWithCreator) && Boolean(devNote);
   const candles = Array.isArray(candleWishes)
-    ? candleWishes.map((w) => String(w || "").trim().slice(0, 200))
+    ? candleWishes.map((w) =>
+        String(w || "")
+          .trim()
+          .slice(0, 200),
+      )
     : [];
   const balloons = Array.isArray(balloonWishes)
-    ? balloonWishes.map((w) => String(w || "").trim().slice(0, 200))
+    ? balloonWishes.map((w) =>
+        String(w || "")
+          .trim()
+          .slice(0, 200),
+      )
     : [];
-  const who = String(name || process.env.NAME || "Friend").trim().slice(0, 40);
+  const who = String(name || process.env.NAME || "Friend")
+    .trim()
+    .slice(0, 40);
 
   const creator = (process.env.CREATOR_EMAIL || "").trim();
   const transporter = createTransport();
