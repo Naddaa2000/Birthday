@@ -4,6 +4,12 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const nodemailer = require("nodemailer");
+const {
+  checkAccess,
+  markConsumed,
+  createAccessMiddleware,
+  tokenRequired,
+} = require("./partyAccess");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -14,6 +20,8 @@ const ROOT = fs.existsSync(path.join(__dirname, "index.html"))
 
 app.use(express.json({ limit: "64kb" }));
 app.use(express.static(ROOT));
+
+const requirePartyAccess = createAccessMiddleware(ROOT);
 function parseWishes() {
   return String(process.env.WISHES || "")
     .split("|")
@@ -347,11 +355,21 @@ function createTransport() {
   });
 }
 
-app.get("/api/config", (_req, res) => {
+app.get("/api/access", async (req, res) => {
+  const result = await checkAccess(req, ROOT);
+  res.status(result.ok ? 200 : result.status).json({
+    ok: result.ok,
+    code: result.code,
+    error: result.ok ? undefined : result.message,
+    tokenRequired: tokenRequired(),
+  });
+});
+
+app.get("/api/config", requirePartyAccess, (_req, res) => {
   res.json(publicConfig());
 });
 
-app.get("/api/time-gate", async (_req, res) => {
+app.get("/api/time-gate", requirePartyAccess, async (_req, res) => {
   const timezone = (process.env.TIMEZONE || "UTC").trim();
   const unlockAt = (process.env.UNLOCK_AT || "").trim();
   const cityLabel = (process.env.CITY_LABEL || timezone).trim();
@@ -412,7 +430,7 @@ app.get("/api/time-gate", async (_req, res) => {
  * Personal note is ALWAYS included for both guest and creator.
  * "Note to developer" is included when the guest checks the box (or left empty).
  */
-app.post("/api/send-wishes", async (req, res) => {
+app.post("/api/send-wishes", requirePartyAccess, async (req, res) => {
   const {
     email,
     personalNote,
@@ -486,6 +504,7 @@ app.post("/api/send-wishes", async (req, res) => {
       html: guestHtml,
     });
 
+    await markConsumed(ROOT);
     res.json({ ok: true });
   } catch (err) {
     console.error("[send-wishes]", err.message);
@@ -505,5 +524,12 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Origin Night → http://localhost:${PORT}`);
     console.log("Configure .env (copy from .env.example). Never commit .env.");
+    if (tokenRequired()) {
+      const t = process.env.PARTY_TOKEN.trim();
+      console.log(`Invite link → http://localhost:${PORT}/?k=${t}`);
+      console.log("One-shot: token locks after the night is sealed.");
+    } else {
+      console.log("PARTY_TOKEN not set — open access (anyone can open the site).");
+    }
   });
 }
