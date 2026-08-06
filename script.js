@@ -490,8 +490,37 @@
   function openSealModal() {
     if (state.sealed || !partyComplete()) return;
     sealStatus.hidden = true;
+    setDevNoteChoice(false);
     sealModal.showModal();
   }
+
+  function setDevNoteChoice(yes) {
+    const share = document.getElementById("shareWithCreator");
+    const field = document.getElementById("devNoteField");
+    const yesBtn = document.getElementById("devNoteYes");
+    const noBtn = document.getElementById("devNoteNo");
+    const area = document.getElementById("devNote");
+
+    share.checked = yes;
+    field.hidden = !yes;
+    yesBtn.classList.toggle("active", yes);
+    noBtn.classList.toggle("active", !yes);
+    yesBtn.setAttribute("aria-pressed", yes ? "true" : "false");
+    noBtn.setAttribute("aria-pressed", yes ? "false" : "true");
+
+    if (!yes) {
+      area.value = "";
+    } else {
+      setTimeout(() => area.focus(), 40);
+    }
+  }
+
+  document.getElementById("devNoteYes")?.addEventListener("click", () => {
+    setDevNoteChoice(true);
+  });
+  document.getElementById("devNoteNo")?.addEventListener("click", () => {
+    setDevNoteChoice(false);
+  });
 
   let toastTimer;
 
@@ -690,12 +719,142 @@
   }
 
   let audioCtx;
+  let musicGain = null;
+  let musicPlaying = false;
+  let musicMuted = false;
+  let musicTimer = null;
+
   function getAudio() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (audioCtx.state === "suspended") audioCtx.resume();
+    if (!musicGain) {
+      musicGain = audioCtx.createGain();
+      musicGain.gain.value = 0.045;
+      musicGain.connect(audioCtx.destination);
+    }
     return audioCtx;
+  }
+
+  /** Soft piano-like tone */
+  function playPianoNote(freq, start, dur) {
+    const ctx = getAudio();
+    const now = start;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const g = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc1.type = "triangle";
+    osc2.type = "sine";
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq * 2, now);
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(2400, now);
+    filter.Q.value = 0.7;
+
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.22, now + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.12, now + Math.min(0.2, dur * 0.3));
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+    osc1.connect(filter);
+    osc2.connect(g);
+    filter.connect(g);
+    g.connect(musicGain);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + dur + 0.05);
+    osc2.stop(now + dur + 0.05);
+  }
+
+  // Happy Birthday (C major), gentle tempo — [freqHz, beats]
+  const HAPPY_BIRTHDAY = [
+    [261.63, 0.75],
+    [261.63, 0.25],
+    [293.66, 1],
+    [261.63, 1],
+    [349.23, 1],
+    [329.63, 2],
+    [261.63, 0.75],
+    [261.63, 0.25],
+    [293.66, 1],
+    [261.63, 1],
+    [392.0, 1],
+    [349.23, 2],
+    [261.63, 0.75],
+    [261.63, 0.25],
+    [523.25, 1],
+    [440.0, 1],
+    [349.23, 1],
+    [329.63, 1],
+    [293.66, 2],
+    [466.16, 0.75],
+    [466.16, 0.25],
+    [440.0, 1],
+    [349.23, 1],
+    [392.0, 1],
+    [349.23, 2.5],
+  ];
+
+  function scheduleHappyBirthday() {
+    if (!musicPlaying) return;
+    const ctx = getAudio();
+    const beat = 0.42;
+    let t = ctx.currentTime + 0.05;
+    let total = 0.05;
+
+    for (const [freq, beats] of HAPPY_BIRTHDAY) {
+      const dur = beats * beat;
+      playPianoNote(freq, t, dur * 0.92);
+      t += dur;
+      total += dur;
+    }
+
+    total += 1.2; // pause before loop
+    clearTimeout(musicTimer);
+    musicTimer = setTimeout(scheduleHappyBirthday, total * 1000);
+  }
+
+  function startMusic() {
+    if (musicPlaying) return;
+    try {
+      getAudio();
+      musicPlaying = true;
+      musicGain.gain.setTargetAtTime(
+        musicMuted ? 0.0001 : 0.045,
+        audioCtx.currentTime,
+        0.05
+      );
+      scheduleHappyBirthday();
+      syncMusicBtn();
+    } catch (_) {}
+  }
+
+  function setMusicMuted(muted) {
+    musicMuted = muted;
+    try {
+      getAudio();
+      // Only change volume — do not reschedule (avoids overlapping melodies)
+      musicGain.gain.cancelScheduledValues(audioCtx.currentTime);
+      musicGain.gain.setTargetAtTime(
+        muted ? 0.0001 : 0.045,
+        audioCtx.currentTime,
+        0.05
+      );
+    } catch (_) {}
+    syncMusicBtn();
+  }
+
+  function syncMusicBtn() {
+    const btn = document.getElementById("btnMusic");
+    if (!btn) return;
+    btn.setAttribute("aria-pressed", musicMuted ? "false" : "true");
+    btn.textContent = musicMuted ? "♪ Muted" : "♪ Piano";
+    btn.title = musicMuted ? "Unmute piano" : "Mute piano";
   }
 
   function playPop() {
@@ -748,9 +907,15 @@
   btnRelight.addEventListener("click", () => buildCandles(true));
   btnRefill.addEventListener("click", () => buildBalloons());
 
+  document.getElementById("btnMusic")?.addEventListener("click", () => {
+    if (!musicPlaying) startMusic();
+    else setMusicMuted(!musicMuted);
+  });
+
   document.getElementById("btnEnter").addEventListener("click", () => {
     try {
       getAudio();
+      startMusic();
     } catch (_) {}
     intro.classList.add("gone");
   });
