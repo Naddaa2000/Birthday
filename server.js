@@ -9,6 +9,10 @@ const {
   markConsumed,
   createAccessMiddleware,
   tokenRequired,
+  parseTokenList,
+  extractToken,
+  listInviteHints,
+  oneShotEnabled,
 } = require("./partyAccess");
 
 const app = express();
@@ -504,7 +508,7 @@ app.post("/api/send-wishes", requirePartyAccess, async (req, res) => {
       html: guestHtml,
     });
 
-    await markConsumed(ROOT);
+    await markConsumed(ROOT, extractToken(req));
     res.json({ ok: true });
   } catch (err) {
     console.error("[send-wishes]", err.message);
@@ -525,11 +529,17 @@ if (require.main === module) {
     console.log(`Origin Night → http://localhost:${PORT}`);
     console.log("Configure .env (copy from .env.example). Never commit .env.");
     if (tokenRequired()) {
-      const t = process.env.PARTY_TOKEN.trim();
-      console.log(`Invite link → http://localhost:${PORT}/?k=${t}`);
-      console.log("One-shot: token locks after the night is sealed.");
+      const base = `http://localhost:${PORT}`;
+      const links = listInviteHints(base);
+      console.log(
+        `Invite mode: ${parseTokenList().length} token(s), one-shot=${oneShotEnabled()}`,
+      );
+      for (const link of links.slice(0, 8)) {
+        console.log(`  ${link}`);
+      }
+      if (links.length > 8) console.log(`  … +${links.length - 8} more`);
     } else {
-      console.log("PARTY_TOKEN not set — open access (anyone can open the site).");
+      console.log("PARTY_TOKEN(S) not set — open access (anyone can open the site).");
     }
   });
 }

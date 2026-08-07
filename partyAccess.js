@@ -5,20 +5,42 @@ const path = require("path");
 const crypto = require("crypto");
 
 /**
- * Invite token gate.
- * Set PARTY_TOKEN in .env, share https://yoursite/?k=THAT_TOKEN
- * After a successful seal email, the token is marked consumed (one night).
+ * Multi-invite token gate.
  *
- * Storage: local file data/party-state.json
- * Optional (Vercel): UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN
+ * PARTY_TOKEN=one-secret
+ *   — or —
+ * PARTY_TOKENS=alice-secret,bob-secret,cara-secret
+ *
+ * Each guest gets their own link: https://yoursite/?k=THEIR_SECRET
+ * After THAT guest seals, only their token locks. Others still work.
+ *
+ * PARTY_ONE_SHOT=false — valid tokens never lock (shared reusable link)
+ *
+ * Storage: data/party-state.json + optional Upstash Redis
  */
 
-function expectedToken() {
-  return String(process.env.PARTY_TOKEN || "").trim();
+function parseTokenList() {
+  const set = new Set();
+  const single = String(process.env.PARTY_TOKEN || "").trim();
+  if (single) set.add(single);
+
+  const multi = String(process.env.PARTY_TOKENS || "");
+  for (const part of multi.split(/[,|\n]/)) {
+    const t = part.trim();
+    if (t) set.add(t);
+  }
+  return [...set];
 }
 
 function tokenRequired() {
-  return Boolean(expectedToken());
+  return parseTokenList().length > 0;
+}
+
+function oneShotEnabled() {
+  const raw = String(process.env.PARTY_ONE_SHOT ?? "true")
+    .trim()
+    .toLowerCase();
+  return !(raw === "0" || raw === "false" || raw === "no" || raw === "off");
 }
 
 function extractToken(req) {
@@ -43,14 +65,14 @@ function timingSafeEqualStr(a, b) {
 }
 
 function tokenMatches(provided) {
-  const expected = expectedToken();
-  if (!expected) return true;
+  const list = parseTokenList();
+  if (!list.length) return true;
   if (!provided) return false;
-  return timingSafeEqualStr(provided, expected);
+  return list.some((expected) => timingSafeEqualStr(provided, expected));
 }
 
-function stateKey() {
-  const t = expectedToken();
+function stateKeyForToken(token) {
+  const t = String(token || "").trim();
   if (!t) return "party:default";
   return `party:${crypto.createHash("sha256").update(t).digest("hex").slice(0, 24)}`;
 }
@@ -122,9 +144,9 @@ async function upstashSet(key, value) {
   return r.ok;
 }
 
-async function isConsumed(root) {
-  if (!tokenRequired()) return false;
-  const key = stateKey();
+async function isConsumed(root, providedToken) {
+  if (!tokenRequired() || !oneShotEnabled()) return false;
+  const key = stateKeyForToken(providedToken);
 
   const remote = await upstashGet(key);
   if (remote === "1" || remote === 1 || remote === "true") return true;
@@ -133,9 +155,12 @@ async function isConsumed(root) {
   return Boolean(local[key]?.consumed);
 }
 
-async function markConsumed(root) {
-  if (!tokenRequired()) return;
-  const key = stateKey();
+async function markConsumed(root, providedToken) {
+  if (!tokenRequired() || !oneShotEnabled()) return;
+  const token = String(providedToken || "").trim();
+  if (!token) return;
+
+  const key = stateKeyForToken(token);
   const stamp = {
     consumed: true,
     at: new Date().toISOString(),
@@ -184,12 +209,13 @@ async function checkAccess(req, root) {
     };
   }
 
-  if (await isConsumed(root)) {
+  if (await isConsumed(root, provided)) {
     return {
       ok: false,
       code: "consumed",
       status: 410,
-      message: "This night is already sealed. The invite can only be used once.",
+      message:
+        "This invite was already used. Each guest needs their own private link.",
     };
   }
 
@@ -213,11 +239,18 @@ function createAccessMiddleware(root) {
   };
 }
 
+function listInviteHints(baseUrl) {
+  const list = parseTokenList();
+  return list.map((t) => `${baseUrl}/?k=${encodeURIComponent(t)}`);
+}
+
 module.exports = {
   tokenRequired,
-  expectedToken,
+  parseTokenList,
   extractToken,
   checkAccess,
   markConsumed,
   createAccessMiddleware,
+  listInviteHints,
+  oneShotEnabled,
 };

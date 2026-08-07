@@ -19,20 +19,33 @@ Open `http://localhost:3000`.
 - `NAME`, `AGE`, `FROM`, `THEME` (`batman` | `spiderman`)
 - `WISHES` (pipe-separated balloon messages), `WISHES_COUNT`, `CAKE_WISH`
 - `TIMEZONE`, `CITY_LABEL`, `UNLOCK_AT` — site stays locked until that local time
-- `PARTY_TOKEN` — secret invite key. Share only `https://yoursite/?k=YOUR_TOKEN`. After the guest seals (sends email), that token is locked for good. Leave empty for open testing.
-- On Vercel, also set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (free [Upstash](https://upstash.com) Redis) so the lock survives serverless restarts.
+- `PARTY_TOKEN` / `PARTY_TOKENS` — invite secrets. Give **each guest their own** `?k=` link. After they seal, only that guest’s token locks.
+- `PARTY_ONE_SHOT=false` — same link reusable by everyone (no lock after seal).
+- On Vercel, set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` ([Upstash](https://upstash.com)) so locks persist.
 - `CREATOR_EMAIL` + SMTP settings — guest emails BCC you (address never shown in the UI)
 
 **Never commit `.env`.** It contains secrets.
 
-## One-time invite
+## Invites for multiple guests
 
-1. Set a long random value: `PARTY_TOKEN=my-long-secret-abc123`
-2. Restart / redeploy
-3. Send the guest **only** this link: `https://YOUR-DOMAIN/?k=my-long-secret-abc123`
-4. They play once and seal → later visits with the same link show “Already sealed.”
+1. In Vercel env (or `.env`):
 
-To reset for a rehearsal, delete `data/party-state.json` (local) or clear the Upstash key / change `PARTY_TOKEN`.
+```env
+PARTY_TOKENS=alex-a1b2,sam-c3d4,jordan-e5f6
+PARTY_ONE_SHOT=true
+```
+
+2. Redeploy, then send **different** links:
+
+- `https://yoursite/?k=alex-a1b2`
+- `https://yoursite/?k=sam-c3d4`
+- `https://yoursite/?k=jordan-e5f6`
+
+3. When Alex seals, only Alex’s link locks. Sam and Jordan still work.
+
+**Why one PC locked the other:** you shared one token. Sealing it once locked that invite for everyone.
+
+To reopen a used invite: delete its `party:…` key in Upstash, or issue a new token.
 
 ## Deploy on Vercel
 
