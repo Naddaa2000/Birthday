@@ -18,6 +18,18 @@
       footer: "Spider-Man · Queens",
       intro: "QUEENS LOADING",
     },
+    wonder: {
+      mark: "⚔️",
+      tag: "THEMYSCIRA EDITION",
+      footer: "Wonder · Themyscira",
+      intro: "THEMYSCIRA LOADING",
+    },
+    catwoman: {
+      mark: "🐈‍⬛",
+      tag: "EAST END EDITION",
+      footer: "Catwoman · East End",
+      intro: "EAST END LOADING",
+    },
   };
 
   const ACHIEVE_LABELS = {
@@ -99,44 +111,27 @@
   const sealForm = document.getElementById("sealForm");
   const sealStatus = document.getElementById("sealStatus");
 
-  const TOKEN_KEY = "originNightToken";
-
-  function readPartyToken() {
-    const params = new URLSearchParams(window.location.search);
-    const fromUrl = (params.get("k") || params.get("token") || "").trim();
-    if (fromUrl) {
-      try {
-        sessionStorage.setItem(TOKEN_KEY, fromUrl);
-      } catch {
-        /* ignore */
-      }
-      return fromUrl;
-    }
-    try {
-      return (sessionStorage.getItem(TOKEN_KEY) || "").trim();
-    } catch {
-      return "";
-    }
-  }
-
-  function apiHeaders(extra) {
-    const headers = { ...(extra || {}) };
-    const token = readPartyToken();
-    if (token) headers["X-Party-Token"] = token;
-    return headers;
-  }
-
-  function withTokenQuery(url) {
-    const token = readPartyToken();
-    if (!token) return url;
-    const u = new URL(url, window.location.origin);
-    u.searchParams.set("k", token);
-    return u.pathname + u.search;
-  }
-
   function normalizeTheme(raw) {
-    const t = String(raw || "").toLowerCase().trim();
-    if (t === "spiderman" || t === "spider-man" || t === "girls") return "spiderman";
+    const t = String(raw || "")
+      .toLowerCase()
+      .trim();
+    if (t === "spiderman" || t === "spider-man" || t === "spider")
+      return "spiderman";
+    if (
+      t === "wonder" ||
+      t === "wonderwoman" ||
+      t === "wonder-woman" ||
+      t === "ww"
+    )
+      return "wonder";
+    if (
+      t === "catwoman" ||
+      t === "cat-woman" ||
+      t === "cat" ||
+      t === "selina"
+    )
+      return "catwoman";
+    if (t === "batman" || t === "bat") return "batman";
     return "batman";
   }
 
@@ -189,10 +184,15 @@
 
   function setTheme(theme) {
     state.theme = theme;
-    body.classList.remove("theme-batman", "theme-spiderman");
+    body.classList.remove(
+      "theme-batman",
+      "theme-spiderman",
+      "theme-wonder",
+      "theme-catwoman",
+    );
     body.classList.add(`theme-${theme}`);
     body.dataset.theme = theme;
-    const meta = THEME_META[theme];
+    const meta = THEME_META[theme] || THEME_META.batman;
     brandMark.textContent = meta.mark;
     brandTag.textContent = meta.tag;
     footerTheme.textContent = meta.footer;
@@ -201,6 +201,8 @@
   }
 
   const BAT_SVG = `<svg viewBox="0 0 64 28" fill="currentColor" aria-hidden="true"><path d="M32 16c-2-6-4-10-6-12 1 4 1 8 0 11-4-3-9-6-14-7 5 3 8 7 9 12-5-1-10-1-15 1 6 1 11 4 14 8 2-3 4-5 6-5s4 2 6 5c3-4 8-7 14-8-5-2-10-2-15-1 1-5 4-9 9-12-5 1-10 4-14 7-1-3-1-7 0-11-2 2-4 6-6 12z"/></svg>`;
+
+  const CAT_SVG = `<svg viewBox="0 0 64 28" fill="currentColor" aria-hidden="true"><path d="M8 18c2-6 6-10 10-11 1 3 1 6 0 8 3-2 7-3 11-3s8 1 11 3c-1-2-1-5 0-8 4 1 8 5 10 11-3-1-6 0-8 2-2-2-5-3-8-3h-10c-3 0-6 1-8 3-2-2-5-3-8-2zm6-8 3-6 2 5m26 1 2-5 3 6"/></svg>`;
 
   function spawnSkyLife(theme) {
     const layer = document.getElementById("skyLife");
@@ -229,6 +231,49 @@
         if (svg) {
           svg.style.animationDuration = `${0.2 + Math.random() * 0.14}s`;
         }
+        layer.appendChild(el);
+      }
+      return;
+    }
+
+    if (theme === "wonder") {
+      for (let i = 0; i < 6; i++) {
+        const line = document.createElement("div");
+        line.className = "sky-lasso";
+        line.style.top = `${10 + Math.random() * 42}%`;
+        line.style.left = `${4 + Math.random() * 40}%`;
+        line.style.width = `${120 + Math.random() * 180}px`;
+        line.style.setProperty("--ang", `${-24 + Math.random() * 40}deg`);
+        line.style.animationDuration = `${6 + Math.random() * 7}s`;
+        line.style.animationDelay = `${-Math.random() * 9}s`;
+        layer.appendChild(line);
+      }
+      for (let i = 0; i < 10; i++) {
+        const star = document.createElement("div");
+        star.className = "sky-star";
+        star.style.top = `${5 + Math.random() * 40}%`;
+        star.style.left = `${10 + Math.random() * 70}%`;
+        star.style.animationDuration = `${8 + Math.random() * 10}s`;
+        star.style.animationDelay = `${-Math.random() * 12}s`;
+        layer.appendChild(star);
+      }
+      return;
+    }
+
+    if (theme === "catwoman") {
+      for (let i = 0; i < 6; i++) {
+        const el = document.createElement("div");
+        el.className = "sky-cat";
+        el.innerHTML = CAT_SVG;
+        el.style.top = `${8 + Math.random() * 34}%`;
+        el.style.left = "0";
+        el.style.setProperty("--s", String(0.7 + Math.random() * 0.9));
+        el.style.setProperty("--o", String(0.5 + Math.random() * 0.35));
+        el.style.setProperty("--bob", `${(Math.random() - 0.5) * 18}px`);
+        el.style.setProperty("--arc", `${8 + Math.random() * 24}px`);
+        const dur = 11 + Math.random() * 12;
+        el.style.animationDuration = `${dur}s`;
+        el.style.animationDelay = `${-Math.random() * dur}s`;
         layer.appendChild(el);
       }
       return;
@@ -661,7 +706,7 @@
     try {
       const res = await fetch("/api/send-wishes", {
         method: "POST",
-        headers: apiHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
           personalNote,
@@ -670,7 +715,6 @@
           candleWishes: state.candleWishes,
           balloonWishes: state.collectedBalloonWishes,
           name: state.name,
-          token: readPartyToken(),
         }),
       });
       const data = await res.json();
@@ -773,17 +817,27 @@
 
     function spawn() {
       const n = Math.min(36, Math.floor(window.innerWidth / 34));
-      const batman = state.theme === "batman";
+      const theme = state.theme;
+      const batman = theme === "batman";
+      const wonder = theme === "wonder";
+      const cat = theme === "catwoman";
       particles = Array.from({ length: n }, () => ({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
-        s: batman ? 1.2 + Math.random() * 2.2 : 1.5 + Math.random() * 3,
-        vy: batman
+        s: batman || cat ? 1.2 + Math.random() * 2.2 : 1.5 + Math.random() * 3,
+        vy: batman || cat
           ? -0.12 - Math.random() * 0.35
           : -0.18 - Math.random() * 0.45,
-        vx: (Math.random() - 0.5) * (batman ? 0.45 : 0.55),
-        a: batman ? 0.08 + Math.random() * 0.2 : 0.12 + Math.random() * 0.28,
-        kind: batman ? "ember" : Math.random() > 0.55 ? "spark" : "ember",
+        vx: (Math.random() - 0.5) * (batman || cat ? 0.45 : 0.55),
+        a: batman || cat
+          ? 0.08 + Math.random() * 0.2
+          : 0.12 + Math.random() * 0.28,
+        kind:
+          wonder || theme === "spiderman"
+            ? Math.random() > 0.5
+              ? "spark"
+              : "ember"
+            : "ember",
       }));
     }
 
@@ -795,12 +849,12 @@
       const accent2 = getComputedStyle(document.body)
         .getPropertyValue("--accent-2")
         .trim();
-      const batman = state.theme === "batman";
+      const drift = state.theme === "batman" || state.theme === "catwoman";
 
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
-        if (batman) p.x += Math.sin(p.y * 0.02) * 0.15;
+        if (drift) p.x += Math.sin(p.y * 0.02) * 0.15;
         if (p.y < -10) {
           p.y = window.innerHeight + 10;
           p.x = Math.random() * window.innerWidth;
@@ -1050,45 +1104,19 @@
   function showGate(data) {
     gate.hidden = false;
     app.hidden = true;
-
     const title = document.querySelector(".gate-title");
     const tag = document.querySelector(".gate-tag");
     const countdown = document.getElementById("countdown");
-    const accessCode = data.accessCode || null;
-
-    if (accessCode === "consumed") {
-      if (tag) tag.textContent = "NIGHT COMPLETE";
-      if (title) title.textContent = "Already sealed.";
-      document.getElementById("gateSub").textContent =
-        data.error ||
-        "This invite was used. Origin Night only happens once.";
-      if (countdown) countdown.hidden = true;
-      document.getElementById("gateMeta").textContent = "";
-    } else if (accessCode === "missing" || accessCode === "invalid") {
-      if (tag) tag.textContent = "PRIVATE INVITE";
-      if (title) title.textContent =
-        accessCode === "missing" ? "Invite required." : "Invalid invite.";
-      document.getElementById("gateSub").textContent =
-        data.error ||
-        "Open the private link you were sent (it ends with ?k=…).";
-      if (countdown) countdown.hidden = true;
-      document.getElementById("gateMeta").textContent = "";
-    } else {
-      if (tag) tag.textContent = "LOCKED BIOME";
-      if (title) title.textContent = "Not yet.";
-      document.getElementById("gateSub").textContent =
-        `Opens when it’s time in ${data.cityLabel || data.timezone}`;
-      if (countdown) countdown.hidden = false;
-      document.getElementById("gateMeta").textContent = data.unlockAt
-        ? `Unlocks ${data.unlockAt.replace("T", " ")} · ${data.timezone}`
-        : "";
-    }
-
+    if (tag) tag.textContent = "LOCKED BIOME";
+    if (title) title.textContent = "Not yet.";
+    if (countdown) countdown.hidden = false;
+    document.getElementById("gateSub").textContent =
+      `Opens when it’s time in ${data.cityLabel || data.timezone}`;
+    document.getElementById("gateMeta").textContent = data.unlockAt
+      ? `Unlocks ${data.unlockAt.replace("T", " ")} · ${data.timezone}`
+      : "";
     const err = document.getElementById("gateError");
-    if (data.error && !accessCode) {
-      err.hidden = false;
-      err.textContent = data.error;
-    } else if (data.error && accessCode && data.showError) {
+    if (data.error) {
       err.hidden = false;
       err.textContent = data.error;
     } else {
@@ -1118,49 +1146,16 @@
     }
   }
 
-  async function checkAccess() {
-    const res = await fetch(withTokenQuery("/api/access"), {
-      headers: apiHeaders(),
-    });
-    const data = await res.json();
-    return data;
-  }
-
   async function checkTimeGate() {
-    const res = await fetch(withTokenQuery("/api/time-gate"), {
-      headers: apiHeaders(),
-    });
+    const res = await fetch("/api/time-gate");
     const data = await res.json();
-    if (!res.ok) {
-      return {
-        ok: false,
-        accessDenied: true,
-        data: {
-          accessCode: data.code || "invalid",
-          error: data.error || "Access denied.",
-        },
-      };
-    }
     if (data.unlocked) return { ok: true, data };
     return { ok: false, data };
   }
 
   async function bootstrap(fromCountdown) {
     try {
-      const access = await checkAccess();
-      if (access.tokenRequired && !access.ok) {
-        showGate({
-          accessCode: access.code,
-          error: access.error,
-        });
-        return;
-      }
-
       const gateResult = await checkTimeGate();
-      if (gateResult.accessDenied) {
-        showGate(gateResult.data);
-        return;
-      }
       if (!gateResult.ok) {
         showGate(gateResult.data);
         if (
@@ -1179,17 +1174,7 @@
         // soft unlock flash
       }
 
-      const cfgRes = await fetch(withTokenQuery("/api/config"), {
-        headers: apiHeaders(),
-      });
-      if (!cfgRes.ok) {
-        const err = await cfgRes.json().catch(() => ({}));
-        showGate({
-          accessCode: err.code || "invalid",
-          error: err.error || "Could not load party config.",
-        });
-        return;
-      }
+      const cfgRes = await fetch("/api/config");
       const cfg = await cfgRes.json();
       applyConfig(cfg);
       showApp();
