@@ -86,6 +86,78 @@ body.theme-spiderman {
   --brand-city: "QUEENS EDITION";
 }
 
+/* Wonder — Themyscira (adult warrior gold & crimson) */
+body.theme-wonder {
+  --bg-0: #06040a;
+  --bg-1: #120a14;
+  --bg-2: #1c1220;
+  --panel: rgba(18, 10, 20, 0.86);
+  --panel-solid: #160c1a;
+  --border: #5a3a28;
+  --border-hi: #d4a017;
+  --text: #f6f0e8;
+  --muted: #b8a090;
+  --accent: #d4a017;
+  --accent-2: #b01030;
+  --danger: #e02040;
+  --glow: rgba(212, 160, 23, 0.45);
+  --glow-2: rgba(176, 16, 48, 0.35);
+  --cake-1: #5a1820;
+  --cake-2: #8a2030;
+  --cake-3: #c9a227;
+  --frost: #f5e6c8;
+  --candle: #ffe8c0;
+  --flame: #ffb040;
+  --b1: #d4a017;
+  --b2: #b01030;
+  --b3: #1a2848;
+  --b4: #e8d4a8;
+  --b5: #6b2040;
+  --b6: #f0c040;
+  --city: #0c0810;
+  --signal: #d4a017;
+  --skin-shirt: #8a1528;
+  --skin-pants: #1a2848;
+  --skin-accent: #d4a017;
+  --brand-city: "THEMYSCIRA EDITION";
+}
+
+/* Catwoman — sleek Gotham violet & emerald */
+body.theme-catwoman {
+  --bg-0: #040508;
+  --bg-1: #0c0a12;
+  --bg-2: #16121c;
+  --panel: rgba(12, 10, 18, 0.88);
+  --panel-solid: #100e16;
+  --border: #3a2850;
+  --border-hi: #9b7bb8;
+  --text: #f0ecf4;
+  --muted: #9a90a8;
+  --accent: #9b7bb8;
+  --accent-2: #2ecc71;
+  --danger: #c0395b;
+  --glow: rgba(155, 123, 184, 0.4);
+  --glow-2: rgba(46, 204, 113, 0.28);
+  --cake-1: #1a1520;
+  --cake-2: #2a2035;
+  --cake-3: #3d2f4a;
+  --frost: #e8e0f0;
+  --candle: #e0d4f0;
+  --flame: #a8f0c0;
+  --b1: #9b7bb8;
+  --b2: #2ecc71;
+  --b3: #1a1a24;
+  --b4: #c4a8d8;
+  --b5: #0e8f55;
+  --b6: #6a5080;
+  --city: #08060c;
+  --signal: #9b7bb8;
+  --skin-shirt: #1a1a1e;
+  --skin-pants: #121218;
+  --skin-accent: #2ecc71;
+  --brand-city: "EAST END EDITION";
+}
+
 html,
 body {
   height: 100%;
@@ -168,6 +240,22 @@ body.theme-spiderman .world-city::after {
   );
 }
 
+body.theme-wonder .world-city::after {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 16px,
+    rgba(212, 160, 23, 0.06) 16px 17px
+  );
+}
+
+body.theme-catwoman .world-city::after {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 16px,
+    rgba(155, 123, 184, 0.06) 16px 17px
+  );
+}
+
 .world-signal {
   position: absolute;
   top: 6%;
@@ -186,6 +274,23 @@ body.theme-spiderman .world-signal {
   background: none;
   box-shadow: none;
   opacity: 0;
+}
+
+body.theme-wonder .world-signal {
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  background: color-mix(in srgb, var(--signal) 55%, transparent);
+  box-shadow: 0 0 50px color-mix(in srgb, var(--glow) 50%, transparent);
+  opacity: 0.4;
+}
+
+body.theme-catwoman .world-signal {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 40%, transparent 0 42%, color-mix(in srgb, var(--signal) 50%, transparent) 43% 48%, transparent 49%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent-2) 25%, transparent) 0 12%, transparent 13%);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--glow) 40%, transparent);
+  opacity: 0.5;
 }
 
 .world-webs {
@@ -334,20 +439,113 @@ body.theme-spiderman .world-webs {
   }
 }
 
-body.theme-batman .sky-web-line,
-body.theme-batman .sky-swing {
-  display: none;
+/* Wonder — lasso ribbons + distant stars */
+.sky-lasso {
+  position: absolute;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 80%, #fff),
+    var(--accent-2),
+    color-mix(in srgb, var(--accent) 70%, transparent),
+    transparent
+  );
+  box-shadow: 0 0 10px var(--glow);
+  opacity: 0;
+  transform-origin: left center;
+  animation: lasso-cast ease-in-out infinite;
 }
 
-body.theme-spiderman .sky-bat {
-  display: none;
+@keyframes lasso-cast {
+  0% {
+    transform: scaleX(0.08) rotate(var(--ang, -12deg));
+    opacity: 0;
+  }
+  18% { opacity: 0.75; }
+  55% {
+    transform: scaleX(1) rotate(var(--ang, -12deg));
+    opacity: 0.5;
+  }
+  100% {
+    transform: scaleX(1.05) rotate(calc(var(--ang, -12deg) + 4deg));
+    opacity: 0;
+  }
 }
+
+.sky-star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--glow);
+  opacity: 0;
+  animation: star-drift linear infinite;
+}
+
+@keyframes star-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.6);
+    opacity: 0;
+  }
+  15% { opacity: 0.7; }
+  100% {
+    transform: translate3d(30vw, 18vh, 0) scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* Catwoman — sleek feline silhouettes */
+.sky-cat {
+  position: absolute;
+  width: 36px;
+  height: 16px;
+  opacity: 0;
+  color: #c8c0d4;
+  filter: drop-shadow(0 0 2px rgba(46, 204, 113, 0.35));
+  animation: cat-glide linear infinite;
+  will-change: transform, opacity;
+}
+
+.sky-cat svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes cat-glide {
+  0% {
+    transform: translate3d(-10vw, var(--bob, 0px), 0) scale(var(--s, 1)) rotate(2deg);
+    opacity: 0;
+  }
+  10% { opacity: var(--o, 0.65); }
+  50% {
+    transform: translate3d(50vw, calc(var(--bob, 0px) + var(--arc, 12px)), 0)
+      scale(var(--s, 1)) rotate(-2deg);
+    opacity: var(--o, 0.65);
+  }
+  100% {
+    transform: translate3d(110vw, var(--bob, 0px), 0) scale(var(--s, 1)) rotate(1deg);
+    opacity: 0;
+  }
+}
+
+body:not(.theme-batman) .sky-bat { display: none; }
+body:not(.theme-spiderman) .sky-web-line,
+body:not(.theme-spiderman) .sky-swing { display: none; }
+body:not(.theme-wonder) .sky-lasso,
+body:not(.theme-wonder) .sky-star { display: none; }
+body:not(.theme-catwoman) .sky-cat { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .sky-bat,
   .sky-bat svg,
   .sky-web-line,
-  .sky-swing {
+  .sky-swing,
+  .sky-lasso,
+  .sky-star,
+  .sky-cat {
     animation: none !important;
     opacity: 0 !important;
   }
@@ -528,6 +726,14 @@ body.theme-spiderman .sky-bat {
 body.theme-spiderman .theme-btn.active {
   color: #fff;
 }
+
+body.theme-catwoman .theme-btn.active {
+  color: #0a0a0a;
+}
+
+body.theme-wonder .btn.primary { color: #0a0a0a; }
+body.theme-spiderman .btn.primary,
+body.theme-catwoman .btn.primary { color: #fff; }
 
 /* ── Docks ───────────────────────────────────────────────── */
 .dock {
@@ -1152,6 +1358,146 @@ body.theme-spiderman .cake-deco {
     linear-gradient(45deg, transparent 48%, rgba(0, 0, 0, 0.2) 49%, transparent 51%),
     linear-gradient(-45deg, transparent 48%, rgba(0, 0, 0, 0.2) 49%, transparent 51%);
   background-size: 18px 18px;
+}
+
+/* Theme: Wonder — gold / crimson warrior */
+body.theme-wonder .cake-layer.top {
+  background: linear-gradient(180deg, #6a1828, #8a2030);
+}
+body.theme-wonder .cake-layer.mid {
+  background:
+    linear-gradient(180deg, #1a2848, #243860 45%, #152040);
+}
+body.theme-wonder .cake-layer.base {
+  background:
+    repeating-linear-gradient(
+      -18deg,
+      #b89020 0 10px,
+      #d4a017 10px 20px
+    );
+}
+
+body.theme-wonder .cake-layer .icing {
+  background: linear-gradient(180deg, #ffe8a0, #d4a017);
+}
+
+body.theme-wonder .cake-drip {
+  background:
+    radial-gradient(ellipse 7px 12px at 14% 0, #d4a017 70%, transparent 72%),
+    radial-gradient(ellipse 6px 10px at 32% 0, #b01030 70%, transparent 72%),
+    radial-gradient(ellipse 8px 14px at 52% 0, #f0c040 70%, transparent 72%),
+    radial-gradient(ellipse 6px 11px at 72% 0, #d4a017 70%, transparent 72%),
+    radial-gradient(ellipse 7px 13px at 90% 0, #b01030 70%, transparent 72%);
+}
+
+body.theme-wonder .cake-badge {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  background: #d4a017;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  box-shadow: 0 0 12px rgba(212, 160, 23, 0.75);
+  z-index: 3;
+}
+
+body.theme-wonder .cake-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  height: 5px;
+  background: repeating-linear-gradient(
+    90deg,
+    #d4a017 0 8px,
+    #b01030 8px 16px,
+    #1a2848 16px 24px
+  );
+  z-index: 3;
+}
+
+body.theme-wonder .cake-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.4;
+  background:
+    radial-gradient(circle at 25% 60%, #d4a017 0 2px, transparent 3px),
+    radial-gradient(circle at 55% 45%, #b01030 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 65%, #d4a017 0 2px, transparent 3px);
+}
+
+/* Theme: Catwoman — violet / emerald noir */
+body.theme-catwoman .cake-layer.top {
+  background: linear-gradient(180deg, #1a1522, #2a2035);
+}
+body.theme-catwoman .cake-layer.mid {
+  background: linear-gradient(180deg, #241c30, #3d2f4a 50%, #2a2038);
+}
+body.theme-catwoman .cake-layer.base {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #1a1a20 0 8px,
+      #2a2035 8px 16px
+    );
+}
+
+body.theme-catwoman .cake-layer .icing {
+  background: linear-gradient(180deg, #e8e0f0, #9b7bb8);
+}
+
+body.theme-catwoman .cake-drip {
+  background:
+    radial-gradient(ellipse 7px 12px at 14% 0, #9b7bb8 70%, transparent 72%),
+    radial-gradient(ellipse 6px 10px at 32% 0, #2ecc71 70%, transparent 72%),
+    radial-gradient(ellipse 8px 14px at 52% 0, #c4a8d8 70%, transparent 72%),
+    radial-gradient(ellipse 6px 11px at 72% 0, #9b7bb8 70%, transparent 72%),
+    radial-gradient(ellipse 7px 13px at 90% 0, #2ecc71 70%, transparent 72%);
+}
+
+body.theme-catwoman .cake-badge {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 10px;
+  background: #2ecc71;
+  clip-path: polygon(
+    8% 55%, 22% 20%, 35% 55%, 50% 5%, 65% 55%, 78% 20%, 92% 55%,
+    78% 80%, 50% 95%, 22% 80%
+  );
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.65);
+  z-index: 3;
+}
+
+body.theme-catwoman .cake-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  height: 5px;
+  background: repeating-linear-gradient(
+    90deg,
+    #9b7bb8 0 7px,
+    #111 7px 14px,
+    #2ecc71 14px 21px
+  );
+  z-index: 3;
+}
+
+body.theme-catwoman .cake-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.35;
+  background:
+    radial-gradient(circle at 22% 65%, #2ecc71 0 2px, transparent 3px),
+    radial-gradient(circle at 50% 50%, #9b7bb8 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 68%, #2ecc71 0 2px, transparent 3px);
 }
 
 .cake-plate {
